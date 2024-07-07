@@ -1,10 +1,10 @@
+#!/bin/bash
+
 # Copyright 2022. All Rights Reserved.
 # Author: Bruce-Lee-LY
 # Date: 19:37:54 on Thu, Jun 02, 2022
 #
 # Description: compile script
-
-#!/bin/bash
 
 set -euo pipefail
 
