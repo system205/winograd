@@ -14,6 +14,9 @@
 template <typename T>
 void matrix_multiply_coppersmith_winograd(const std::vector<std::vector<T>> &A, const std::vector<std::vector<T>> &B,
                                           std::vector<std::vector<T>> &C) {
+    unsigned long int t0;
+
+    t0 = clock();
     size_t A_row = A.size();
     size_t A_column = A[0].size();
     size_t B_row = B.size();
@@ -49,11 +52,10 @@ void matrix_multiply_coppersmith_winograd(const std::vector<std::vector<T>> &A, 
     std::vector<std::vector<T>> U2(dim, std::vector<T>(dim)), U3(dim, std::vector<T>(dim)),
         U4(dim, std::vector<T>(dim));
 
+    std::cout << A_row << " " << B_row << ") Init phase: " << clock() - t0 << std::endl;
+
+    t0 = clock();
     // divide original matrix into 4 sub-matrix
-    // C11 = A11 * B11 + A12 * B21
-    // C12 = A11 * B12 + A12 * B22
-    // C21 = A21 * B11 + A22 * B21
-    // C22 = A21 * B12 + A22 * B22
     for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
             A11[i][j] = A[i][j];
@@ -79,6 +81,8 @@ void matrix_multiply_coppersmith_winograd(const std::vector<std::vector<T>> &A, 
     matrix_sub<T>(B22, B12, T3);  // T3 = B22 - B12
     matrix_sub<T>(T2, B21, T4);   // T4 = T2 - B21
 
+    std::cout << A_row << " " << B_row << ") Calculate phase: " << clock() - t0 << std::endl;
+
     matrix_multiply_coppersmith_winograd<T>(A11, B11, P1);  // P1 = A11 * B11
     matrix_multiply_coppersmith_winograd<T>(A12, B21, P2);  // P2 = A12 * B21
     matrix_multiply_coppersmith_winograd<T>(S4, B22, P3);   // P3 = S4 * B22
@@ -87,6 +91,7 @@ void matrix_multiply_coppersmith_winograd(const std::vector<std::vector<T>> &A, 
     matrix_multiply_coppersmith_winograd<T>(S2, T2, P6);    // P6 = S2 * T2
     matrix_multiply_coppersmith_winograd<T>(S3, T3, P7);    // p7 = S3 * T3
 
+    t0 = clock();
     matrix_add<T>(P1, P2, C11);  // C11 = P1 + P2
     matrix_add<T>(P1, P6, U2);   // U2 = p1 + P6
     matrix_add<T>(U2, P7, U3);   // U3 = U2 + P7
@@ -104,6 +109,7 @@ void matrix_multiply_coppersmith_winograd(const std::vector<std::vector<T>> &A, 
             C[i + dim][j + dim] = C22[i][j];
         }
     }
+    std::cout << A_row << " " << B_row << ") Result phase: " << clock() - t0 << std::endl;
 }
 
 // tiling
