@@ -109,11 +109,14 @@ void matrix_multiply_cpu_coppersmith_winograd(const std::vector<std::vector<T>> 
 
     unsigned long int t0;
     unsigned long int tInitPhase;
-    unsigned long int tInitDividePhase=0;
-    unsigned long int tDividePhase = 0;
     unsigned long int tCalculatePhase;
-    unsigned long int tRecursionPhase;
-    unsigned long int tCombinePhase = 0;
+    unsigned long int tRec1;
+    unsigned long int tRec2;
+    unsigned long int tRec3;
+    unsigned long int tRec4;
+    unsigned long int tRec5;
+    unsigned long int tRec6;
+    unsigned long int tRec7;
     unsigned long int tResultPhase;
 
     MATRIX_TRACE_PROFILE(__FUNCTION__);
@@ -135,7 +138,6 @@ void matrix_multiply_cpu_coppersmith_winograd(const std::vector<std::vector<T>> 
         C[0][0] = A[0][0] * B[0][0];
         return;
     }
-
 
     size_t dim = A_row / 2;
     std::vector<std::vector<T>> A11(dim, std::vector<T>(dim)), A12(dim, std::vector<T>(dim)),
@@ -183,14 +185,26 @@ void matrix_multiply_cpu_coppersmith_winograd(const std::vector<std::vector<T>> 
 
     t0 = clock();
     matrix_multiply_coppersmith_winograd<T>(A11, B11, P1);  // P1 = A11 * B11
+    tRec1 = clock() - t0;
+    t0 = clock();
     matrix_multiply_coppersmith_winograd<T>(A12, B21, P2);  // P2 = A12 * B21
-    matrix_multiply_coppersmith_winograd<T>(S4, B22, P3);   // P3 = S4 * B22
-    matrix_multiply_coppersmith_winograd<T>(A22, T4, P4);   // P4 = A22 * T4
-    matrix_multiply_coppersmith_winograd<T>(S1, T1, P5);    // P5 = S1 * T1
-    matrix_multiply_coppersmith_winograd<T>(S2, T2, P6);    // P6 = S2 * T2
-    matrix_multiply_coppersmith_winograd<T>(S3, T3, P7);    // p7 = S3 * T3
-    tRecursionPhase = clock() - t0;
+    tRec2 = clock() - t0;
+    t0 = clock();
+    matrix_multiply_coppersmith_winograd<T>(S4, B22, P3);  // P3 = S4 * B22
+    tRec3 = clock() - t0;
+    t0 = clock();
+    matrix_multiply_coppersmith_winograd<T>(A22, T4, P4);  // P4 = A22 * T4
+    tRec4 = clock() - t0;
 
+    t0 = clock();
+    matrix_multiply_coppersmith_winograd<T>(S1, T1, P5);  // P5 = S1 * T1
+    tRec5 = clock() - t0;
+    t0 = clock();
+    matrix_multiply_coppersmith_winograd<T>(S2, T2, P6);  // P6 = S2 * T2
+    tRec6 = clock() - t0;
+    t0 = clock();
+    matrix_multiply_coppersmith_winograd<T>(S3, T3, P7);  // p7 = S3 * T3
+    tRec7 = clock() - t0;
 
     t0 = clock();
     matrix_add<T>(P1, P2, C11);  // C11 = P1 + P2
@@ -201,7 +215,6 @@ void matrix_multiply_cpu_coppersmith_winograd(const std::vector<std::vector<T>> 
     matrix_sub<T>(U3, P4, C21);  // C21 = U3 - P4
     matrix_add<T>(U3, P5, C22);  // C22 = U3 + P5
 
-    t0 = clock();
     for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
             C[i][j] = C11[i][j];
@@ -212,15 +225,19 @@ void matrix_multiply_cpu_coppersmith_winograd(const std::vector<std::vector<T>> 
     }
     tResultPhase = clock() - t0;
 
-    std::cout
-    << "Init phase: " << tInitPhase << std::endl
-    << "Init divide phase: " << tInitDividePhase << std::endl
-    << "Divide phase: " << tDividePhase << std::endl
-    << "Calculate phase: " << tCalculatePhase << std::endl
-    << "Recursion phase: " << tRecursionPhase << std::endl
-    << "Combine phase: " << tCombinePhase << std::endl
-    << "Result phase: " << tResultPhase << std::endl
-    << "Total: " << tInitPhase + tInitDividePhase + tDividePhase + tCalculatePhase + tRecursionPhase + tCombinePhase + tResultPhase << std::endl;
+    std::cout << "Init phase: " << tInitPhase << std::endl
+              << "Calculate phase: " << tCalculatePhase << std::endl
+              << "Recursion 1: " << tRec1 << std::endl
+              << "Recursion 2: " << tRec2 << std::endl
+              << "Recursion 3: " << tRec3 << std::endl
+              << "Recursion 4: " << tRec4 << std::endl
+              << "Recursion 5: " << tRec5 << std::endl
+              << "Recursion 6: " << tRec6 << std::endl
+              << "Recursion 7: " << tRec7 << std::endl
+              << "Result phase: " << tResultPhase << std::endl
+              << "Total: "
+              << tInitPhase + tRec1 + tRec2 + tRec3 + tRec4 + tRec5 + tRec6 + tRec7 + tCalculatePhase + tResultPhase
+              << std::endl;
 }
 
 #endif  // __MATRIX_MULTIPLY_CPU_COPPERSMITH_WINOGRAD_H__
